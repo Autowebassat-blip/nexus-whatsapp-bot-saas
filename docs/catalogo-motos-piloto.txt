@@ -1,0 +1,26 @@
+Catalogo interno de Moto Norte Piloto
+
+Este documento es ficticio y sirve para probar el chatbot de WhatsApp.
+
+Datos de atencion:
+- Horario de tienda: lunes a viernes de 09:00 a 18:00.
+- Horario de sabados: 10:00 a 14:00.
+- Telefono de recambios: 928 123 456.
+
+Servicios:
+- Revision basica Yamaha MT-07: 89 EUR. Incluye diagnostico inicial, presion de neumaticos y revision de frenos.
+- Cambio de aceite con Motul 7100 10W40: 54,90 EUR. Incluye aceite, mano de obra y reciclaje del aceite usado.
+- Montaje de neumaticos: 18 EUR por rueda si el cliente compra el neumatico en la tienda.
+
+Productos destacados:
+- Aceite Motul 7100 10W40: 18,90 EUR por litro.
+- Neumatico Pirelli Diablo Rosso IV delantero 120/70 ZR17: 129 EUR.
+- Neumatico Pirelli Diablo Rosso IV trasero 180/55 ZR17: 179 EUR.
+- Casco AGV K6 S negro mate: 389 EUR.
+
+Garantias:
+- El casco AGV K6 S tiene garantia de 24 meses con factura.
+- Los neumaticos tienen garantia por defecto de fabricacion, pero no cubren pinchazos, desgaste normal ni uso en circuito.
+
+Politica de respuesta:
+- Si un cliente pregunta por un dato que no aparece en este documento, se debe responder que no consta en la documentacion disponible y recomendar contactar con la tienda.

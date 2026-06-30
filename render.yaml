@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: nexus-whatsapp-bot-saas
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ENABLE_BAILEYS
+        value: true
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash-lite
+      - key: GEMINI_EMBEDDING_MODEL
+        value: text-embedding-004
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PANEL_ORIGIN
+        sync: false
