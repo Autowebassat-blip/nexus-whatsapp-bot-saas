@@ -13,10 +13,9 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
-    "outDir": "dist",
+    "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["node", "vitest/globals"]
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["dist", "node_modules"]
