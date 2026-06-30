@@ -22,7 +22,7 @@ Tipo de servicio:
 - Runtime: Node
 - Plan: Free
 - Root directory: carpeta del proyecto `nexus-whatsapp-bot-saas`
-- Build command: `npm ci && npm run build`
+- Build command: `npm ci --include=dev && npm run build`
 - Start command: `npm start`
 - Health check path: `/health`
 

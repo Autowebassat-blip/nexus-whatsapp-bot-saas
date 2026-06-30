@@ -77,7 +77,7 @@ Crear servicio:
 4. Si esta dentro de un monorepo, pon Root Directory: `outputs/nexus-whatsapp-bot-saas`. Si subes esta carpeta como repo propio, deja Root Directory vacio.
 5. Runtime: Node.
 6. Plan: Free.
-7. Build Command: `npm ci && npm run build`.
+7. Build Command: `npm ci --include=dev && npm run build`.
 8. Start Command: `npm start`.
 9. Health Check Path: `/health`.
 10. Crea el servicio.
