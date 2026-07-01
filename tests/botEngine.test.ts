@@ -16,6 +16,26 @@ function chunk(input: Partial<RetrievedChunk> & Pick<RetrievedChunk, 'companyId'
 }
 
 describe('BotEngine', () => {
+  it('answers simple greetings without using documents or Gemini', async () => {
+    const repo = createInMemoryBotRepository({
+      chunks: [
+        chunk({ companyId: 'company-a', content: 'El casco AGV cuesta 389 EUR.' }),
+      ],
+    });
+    const engine = new BotEngine({ repository: repo.repository, ai: repo.ai });
+
+    const answer = await engine.answerBotMessage({
+      empresaId: 'company-a',
+      telefonoCliente: '+34600111222',
+      mensajeTexto: 'hola',
+    });
+
+    expect(answer.textoRespuesta).toContain('Hola');
+    expect(answer.debug.route).toEqual(['greeting']);
+    expect(answer.debug.usedChunks).toHaveLength(0);
+    expect(repo.aiCalls).toBe(0);
+  });
+
   it('keeps document retrieval isolated by company', async () => {
     const repo = createInMemoryBotRepository({
       chunks: [

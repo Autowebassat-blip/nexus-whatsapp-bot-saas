@@ -21,6 +21,20 @@ function contextFromChunks(chunks: RetrievedChunk[]) {
     .join('\n');
 }
 
+function greetingAnswer(normalizedQuestion: string) {
+  const simpleGreetings = new Set([
+    'hola',
+    'buenas',
+    'buenos dias',
+    'buenas tardes',
+    'buenas noches',
+    'hey',
+    'ola',
+  ]);
+  if (!simpleGreetings.has(normalizedQuestion)) return null;
+  return 'Hola. Soy el asistente de la tienda. Puedes preguntarme por precios, horarios, servicios o productos disponibles.';
+}
+
 export class BotEngine {
   private readonly repository: BotRepository;
   private readonly ai: BotAiPort;
@@ -33,6 +47,22 @@ export class BotEngine {
   async answerBotMessage(message: BotMessageInput): Promise<BotMessageResult> {
     const normalizedQuestion = normalizeQuestion(message.mensajeTexto);
     const route: string[] = [];
+
+    const greeting = greetingAnswer(normalizedQuestion);
+    if (greeting) {
+      route.push('greeting');
+      await this.repository.logIncomingMessage(message, greeting, route);
+      return {
+        textoRespuesta: greeting,
+        source: 'database',
+        debug: {
+          cacheHit: false,
+          geminiCalled: false,
+          usedChunks: [],
+          route,
+        },
+      };
+    }
 
     route.push('cache');
     const cached = await this.repository.findCachedAnswer(message.empresaId, normalizedQuestion);
