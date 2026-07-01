@@ -20,6 +20,20 @@ type CompanySocket = {
   authDir: string;
 };
 
+function summarizeBaileysError(error: unknown) {
+  if (!error) return null;
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null) {
+    const maybeOutput = error as { output?: { statusCode?: number; payload?: unknown }; message?: string };
+    return JSON.stringify({
+      message: maybeOutput.message,
+      statusCode: maybeOutput.output?.statusCode,
+      payload: maybeOutput.output?.payload,
+    });
+  }
+  return String(error);
+}
+
 async function fileExists(filePath: string) {
   try {
     await fs.access(filePath);
@@ -76,6 +90,7 @@ export class BaileysConnector implements WhatsAppConnector {
       .from('bot_whatsapp_sessions')
       .select('company_id')
       .eq('connector', 'baileys');
+    console.log('[baileys] restoring sessions', { count: data?.length ?? 0 });
     for (const row of (data ?? []) as Array<{ company_id: string }>) {
       await this.connectCompany(row.company_id);
     }
@@ -99,16 +114,18 @@ export class BaileysConnector implements WhatsAppConnector {
     const baileys = await import('@whiskeysockets/baileys');
     const authDir = path.join(os.tmpdir(), 'nexus-baileys', companyId);
     const restored = await this.sessionStore.loadCompanyFiles(companyId);
+    console.log('[baileys] connect requested', { companyId, restoredFiles: restored.length });
     await writeRestoredFiles(authDir, restored);
     const { state, saveCreds } = await baileys.useMultiFileAuthState(authDir);
+    const logger = pino({ level: process.env.BAILEYS_LOG_LEVEL ?? 'info' });
     const socket = baileys.default({
       auth: {
         creds: state.creds,
-        keys: baileys.makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
+        keys: baileys.makeCacheableSignalKeyStore(state.keys, logger),
       },
-      logger: pino({ level: 'silent' }),
+      logger,
       printQRInTerminal: false,
-      browser: ['Nexus WhatsApp Bot', 'Chrome', '1.0.0'],
+      browser: ['Nexus WhatsApp Bot', 'Chrome', '121.0.0'],
     });
 
     this.sockets.set(companyId, { socket, authDir });
@@ -120,14 +137,24 @@ export class BaileysConnector implements WhatsAppConnector {
     });
 
     socket.ev.on('connection.update', async (update) => {
+      const closeError = summarizeBaileysError(update.lastDisconnect?.error);
+      console.log('[baileys] connection.update', {
+        companyId,
+        connection: update.connection,
+        hasQr: Boolean(update.qr),
+        isNewLogin: update.isNewLogin,
+        receivedPendingNotifications: update.receivedPendingNotifications,
+        closeError,
+      });
       if (update.qr) await this.upsertSessionStatus(companyId, 'qr', null, update.qr);
       if (update.connection === 'open') {
         await this.persistAuthDir(companyId, authDir);
+        console.log('[baileys] connected', { companyId, user: socket.user?.id ?? null });
         await this.upsertSessionStatus(companyId, 'connected', null, null, socket.user?.id ?? null);
       }
       if (update.connection === 'close') {
         this.sockets.delete(companyId);
-        await this.upsertSessionStatus(companyId, 'disconnected', 'Conexion cerrada; se reintentara al despertar.');
+        await this.upsertSessionStatus(companyId, 'disconnected', closeError ?? 'Conexion cerrada; se reintentara al despertar.');
         setTimeout(() => {
           void this.connectCompany(companyId);
         }, 5000);
