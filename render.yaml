@@ -16,7 +16,7 @@ services:
       - key: GEMINI_MODEL
         value: gemini-2.0-flash-lite
       - key: GEMINI_EMBEDDING_MODEL
-        value: text-embedding-004
+        value: gemini-embedding-001
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY

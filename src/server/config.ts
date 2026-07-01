@@ -11,7 +11,7 @@ const ConfigSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(20),
   GEMINI_API_KEY: z.string().min(10),
   GEMINI_MODEL: z.string().default('gemini-2.0-flash-lite'),
-  GEMINI_EMBEDDING_MODEL: z.string().default('text-embedding-004'),
+  GEMINI_EMBEDDING_MODEL: z.string().default('gemini-embedding-001'),
   PANEL_ORIGIN: z.string().default('*'),
   ENABLE_BAILEYS: z.enum(['true', 'false']).default('true'),
 });
