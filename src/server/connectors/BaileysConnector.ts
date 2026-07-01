@@ -117,7 +117,7 @@ export class BaileysConnector implements WhatsAppConnector {
     console.log('[baileys] connect requested', { companyId, restoredFiles: restored.length });
     await writeRestoredFiles(authDir, restored);
     const { state, saveCreds } = await baileys.useMultiFileAuthState(authDir);
-    const logger = pino({ level: process.env.BAILEYS_LOG_LEVEL ?? 'info' });
+    const logger = pino({ level: process.env.BAILEYS_LOG_LEVEL ?? 'warn' });
     const socket = baileys.default({
       auth: {
         creds: state.creds,
@@ -147,7 +147,7 @@ export class BaileysConnector implements WhatsAppConnector {
         closeError,
       });
       if (update.qr) await this.upsertSessionStatus(companyId, 'qr', null, update.qr);
-      if (update.connection === 'open') {
+      if (update.connection === 'open' || update.receivedPendingNotifications === true) {
         await this.persistAuthDir(companyId, authDir);
         console.log('[baileys] connected', { companyId, user: socket.user?.id ?? null });
         await this.upsertSessionStatus(companyId, 'connected', null, null, socket.user?.id ?? null);
