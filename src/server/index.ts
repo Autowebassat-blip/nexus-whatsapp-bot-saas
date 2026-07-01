@@ -12,6 +12,7 @@ import { SupabaseSessionFileStore } from './connectors/SupabaseSessionFileStore'
 import { SupabaseStorageDriver } from './connectors/SupabaseStorageDriver';
 import { BaileysConnector } from './connectors/BaileysConnector';
 import { createPanelRouter } from './panel/panelRoutes';
+import { N8nNotifier } from './integrations/n8n';
 
 const config = loadConfig();
 const admin = createSupabaseAdmin(config);
@@ -23,6 +24,10 @@ const ai = new GeminiBotAi({
 const repository = new SupabaseBotRepository(admin);
 const engine = new BotEngine({ repository, ai });
 const sessionStore = new SupabaseSessionFileStore(new SupabaseStorageDriver(admin));
+const n8n = new N8nNotifier({
+  webhookUrl: config.N8N_WEBHOOK_URL,
+  webhookSecret: config.N8N_WEBHOOK_SECRET,
+});
 const connector = new BaileysConnector({
   admin,
   sessionStore,
@@ -40,6 +45,19 @@ const connector = new BaileysConnector({
       empresaId: message.companyId,
       telefonoCliente: message.phone,
       mensajeTexto: message.text,
+    });
+    void n8n.notifyMessage({
+      companyId: message.companyId,
+      phone: message.phone,
+      text: message.text,
+      answer: result.textoRespuesta,
+      source: result.source,
+      route: result.debug.route,
+      cacheHit: result.debug.cacheHit,
+      geminiCalled: result.debug.geminiCalled,
+      createdAt: new Date().toISOString(),
+    }).catch((error) => {
+      console.error('[n8n] webhook notification failed', { error: error instanceof Error ? error.message : String(error) });
     });
     return result.textoRespuesta;
   },

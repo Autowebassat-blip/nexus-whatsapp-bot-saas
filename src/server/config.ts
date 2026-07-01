@@ -14,6 +14,8 @@ const ConfigSchema = z.object({
   GEMINI_EMBEDDING_MODEL: z.string().default('gemini-embedding-001'),
   PANEL_ORIGIN: z.string().default('*'),
   ENABLE_BAILEYS: z.enum(['true', 'false']).default('true'),
+  N8N_WEBHOOK_URL: z.string().url().optional(),
+  N8N_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;

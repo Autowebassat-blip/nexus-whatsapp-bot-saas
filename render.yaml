@@ -27,3 +27,7 @@ services:
         sync: false
       - key: PANEL_ORIGIN
         sync: false
+      - key: N8N_WEBHOOK_URL
+        sync: false
+      - key: N8N_WEBHOOK_SECRET
+        sync: false
