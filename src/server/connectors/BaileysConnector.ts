@@ -162,9 +162,11 @@ export class BaileysConnector implements WhatsAppConnector {
       });
       if (update.qr) await this.upsertSessionStatus(companyId, 'qr', null, update.qr);
       if (update.connection === 'open' || update.receivedPendingNotifications === true) {
-        await this.persistAuthDir(companyId, authDir);
         console.log('[baileys] connected', { companyId, user: socket.user?.id ?? null });
         await this.upsertSessionStatus(companyId, 'connected', null, null, socket.user?.id ?? null);
+        void this.persistAuthDir(companyId, authDir).catch((error) => {
+          console.error('[baileys] failed to persist connected session', { companyId, error: summarizeBaileysError(error) });
+        });
       }
       if (update.connection === 'close') {
         this.sockets.delete(companyId);
