@@ -31,13 +31,38 @@ export class SupabaseSessionFileStore {
     return `baileys/${companyId}/`;
   }
 
+  bundlePathForCompany(companyId: string) {
+    return `${this.prefixForCompany(companyId)}auth-bundle.json`;
+  }
+
   async saveFile(companyId: string, relativePath: string, body: Buffer) {
     const key = `${this.prefixForCompany(companyId)}${safeRelativePath(relativePath)}`;
     await this.driver.upload(key, body);
   }
 
+  async saveCompanyFiles(companyId: string, files: StoredSessionFile[]) {
+    const bundle = files.map((file) => ({
+      relativePath: safeRelativePath(file.relativePath),
+      body: file.body.toString('base64'),
+    }));
+    await this.driver.upload(
+      this.bundlePathForCompany(companyId),
+      Buffer.from(JSON.stringify({ version: 1, files: bundle })),
+    );
+  }
+
   async loadCompanyFiles(companyId: string): Promise<StoredSessionFile[]> {
     const prefix = this.prefixForCompany(companyId);
+    const bundleBody = await this.driver.download(this.bundlePathForCompany(companyId));
+    if (bundleBody) {
+      const parsed = JSON.parse(bundleBody.toString('utf8')) as {
+        files?: Array<{ relativePath: string; body: string }>;
+      };
+      return (parsed.files ?? []).map((file) => ({
+        relativePath: safeRelativePath(file.relativePath),
+        body: Buffer.from(file.body, 'base64'),
+      }));
+    }
     const keys = await this.driver.list(prefix);
     const files = await Promise.all(keys.map(async (key) => {
       const body = await this.driver.download(key);

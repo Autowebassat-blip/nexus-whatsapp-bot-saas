@@ -217,9 +217,8 @@ export class BaileysConnector implements WhatsAppConnector {
   private async persistAuthDir(companyId: string, authDir: string) {
     if (!await fileExists(authDir)) return;
     const files = await readJsonFiles(authDir);
-    for (const file of files) {
-      await this.sessionStore.saveFile(companyId, file.relativePath, file.body);
-    }
+    await this.sessionStore.saveCompanyFiles(companyId, files);
+    console.log('[baileys] session persisted', { companyId, files: files.length });
   }
 
   private async upsertSessionStatus(
