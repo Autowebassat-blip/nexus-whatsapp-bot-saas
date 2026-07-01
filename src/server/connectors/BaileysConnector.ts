@@ -53,17 +53,27 @@ async function writeRestoredFiles(authDir: string, files: Array<{ relativePath: 
 }
 
 async function readJsonFiles(rootDir: string, currentDir = rootDir): Promise<Array<{ relativePath: string; body: Buffer }>> {
-  const entries = await fs.readdir(currentDir, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await fs.readdir(currentDir, { withFileTypes: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw error;
+  }
   const files: Array<{ relativePath: string; body: Buffer }> = [];
   for (const entry of entries) {
     const fullPath = path.join(currentDir, entry.name);
     if (entry.isDirectory()) {
       files.push(...await readJsonFiles(rootDir, fullPath));
     } else if (entry.name.endsWith('.json')) {
-      files.push({
-        relativePath: path.relative(rootDir, fullPath).replace(/\\/g, '/'),
-        body: await fs.readFile(fullPath),
-      });
+      try {
+        files.push({
+          relativePath: path.relative(rootDir, fullPath).replace(/\\/g, '/'),
+          body: await fs.readFile(fullPath),
+        });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      }
     }
   }
   return files;
@@ -87,12 +97,12 @@ export class BaileysConnector implements WhatsAppConnector {
   async start(): Promise<void> {
     if (!this.enabled) return;
     const { data } = await this.admin
-      .from('bot_whatsapp_sessions')
-      .select('company_id')
-      .eq('connector', 'baileys');
+      .from('companies')
+      .select('id')
+      .eq('bot_active', true);
     console.log('[baileys] restoring sessions', { count: data?.length ?? 0 });
-    for (const row of (data ?? []) as Array<{ company_id: string }>) {
-      await this.connectCompany(row.company_id);
+    for (const row of (data ?? []) as Array<{ id: string }>) {
+      await this.connectCompany(row.id);
     }
   }
 
@@ -132,8 +142,12 @@ export class BaileysConnector implements WhatsAppConnector {
     await this.upsertSessionStatus(companyId, 'connecting', null);
 
     socket.ev.on('creds.update', async () => {
-      await saveCreds();
-      await this.persistAuthDir(companyId, authDir);
+      try {
+        await saveCreds();
+        await this.persistAuthDir(companyId, authDir);
+      } catch (error) {
+        console.error('[baileys] failed to persist credentials', { companyId, error: summarizeBaileysError(error) });
+      }
     });
 
     socket.ev.on('connection.update', async (update) => {
